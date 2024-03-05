@@ -4,13 +4,13 @@ import threading
 datastore = {}
 
 def parse_resp(data):
+    # Simplified parsing logic for illustration; real implementation should be more robust
     parts = data.decode().split('\r\n')
-    command = parts[2].lower()  # The command
-    # Collect all arguments, ignoring array lengths and empty strings
-    args = [parts[i] for i in range(3, len(parts), 2) if parts[i]]
-    message = " ".join(args)  # Join arguments into a single string for simplicity
-    return command, message
-
+    if parts[0] == '*2':  # Basic handling for two-part commands like ECHO
+        command = parts[2].lower()  # Command name
+        message = parts[4] if len(parts) > 4 else ''  # Command argument
+        return command, message
+    return parts[2].lower(), None  # For commands without arguments like PING
 
 def handle_client(conn, addr):
     global datastore
@@ -30,7 +30,7 @@ def handle_client(conn, addr):
         elif command == "ping":
             conn.send(b"+PONG\r\n")
         elif command == "set" and len(args) >= 2:
-            key, value = args[0], ''.join(args[1:])
+            key, value = args[0], args[1]
             datastore[key] = value
             conn.send(b"+OK\r\n")
         elif command == "get" and len(args) >= 1:
@@ -41,6 +41,7 @@ def handle_client(conn, addr):
             else:
                 response = f"$-1\r\n"
             conn.send(response.encode())
+
         else:
             print(f"Received unsupported command: {command}")
             # Break or handle unsupported commands differently
