@@ -30,7 +30,7 @@ def handle_client(conn, addr):
         elif command == "ping":
             conn.send(b"+PONG\r\n")
         elif command == "set" and len(args) >= 2:
-            key, value = args[0], args[1]
+            key, value = args[0], ''.join(args[1:])
             datastore[key] = value
             conn.send(b"+OK\r\n")
         elif command == "get" and len(args) >= 1:
