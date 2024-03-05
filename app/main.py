@@ -30,25 +30,29 @@ def handle_client(conn, addr):
             break
 
         command, args = parse_resp(data)
-
+# ====================================================================
         if command == "echo":
             message = " ".join(args).strip()
             response = f"${len(message)}\r\n{message}\r\n"
             conn.send(response.encode())
+# ====================================================================
         elif command == "ping":
             conn.send(b"+PONG\r\n")
+# ====================================================================
         elif command == "set" and len(args) >= 2:
-            key, value = args[0], " ".join(args[1:])
-            datastore[key] = value
+            key, value = args[0], " ".join(args[1:]).strip()
+            datastore[key] = value.strip()
             conn.send(b"+OK\r\n")
+# ====================================================================
         elif command == "get":
             key = args[0] if args else ""
-            value = datastore.get(key)
+            value = datastore.get(key, "").strip()
             if value is not None:
                 response = f"${len(value)}\r\n{value}\r\n"
             else:
                 response = "$-1\r\n"
             conn.send(response.encode())
+# ====================================================================
         else:
             print(f"Received unsupported command: {command}")
             # Optionally send an error response to the client
