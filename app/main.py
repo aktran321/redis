@@ -32,7 +32,7 @@ def handle_client(conn, addr):
         command, args = parse_resp(data)
 
         if command == "echo":
-            message = " ".join(args)
+            message = " ".join(args).strip()
             response = f"${len(message)}\r\n{message}\r\n"
             conn.send(response.encode())
         elif command == "ping":
