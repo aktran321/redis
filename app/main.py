@@ -27,15 +27,23 @@ def handle_client(conn, addr):
         
         command, message = parse_resp(data)
         
-        if command == "echo" and message is not None:  # Checks for 'echo' command and ensures message is not None
+        # Handling PING command
+        if command == "ping":
+            response = "+PONG\r\n"
+            conn.send(response.encode())
+        # Handling ECHO command
+        elif command == "echo" and message is not None:
             response = f"${len(message)}\r\n{message}\r\n"
             conn.send(response.encode())
-        elif command is None:
-            print("Received malformed command")
-            break  # Optionally close the connection on malformed command
+        else:
+            print("Received malformed or unsupported command")
+            # Optional: Close the connection if command is malformed or unsupported
+            # conn.close()
+            # break
 
     conn.close()
     print(f"Connection with {addr} closed")
+
 
 def main():
     server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
