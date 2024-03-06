@@ -64,7 +64,7 @@ def handle_client(conn, addr):
 # ====================================================================
         elif command == "get":
             key = args[0] if args else ""
-            value = datastore.get(key, "").strip()
+            value = datastore.get(key, None)
             if value is not None:
                 response = f"${len(value)}\r\n{value}\r\n"
             else:
