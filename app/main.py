@@ -71,6 +71,13 @@ def handle_client(conn, addr):
                 response = "$-1\r\n"
             conn.send(response.encode())
 # ====================================================================
+        elif command == "type":
+            key = args[0] if args else ""
+            if key in datastore:
+                conn.send(b"+string\r\n") 
+            else:
+                return conn.send(b"+none\r\n")
+# ====================================================================
         else:
             print(f"Received unsupported command: {command}")
             # Optionally send an error response to the client
