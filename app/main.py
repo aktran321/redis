@@ -4,9 +4,20 @@ import threading
 # Initialize the datastore for storing key-value pairs
 datastore = {}
 
+def delete_key_after_delay(key, delay_ms):
+    def delete_key():
+        if key in datastore:
+            del datastore[key]
+            print(f"Key {key} has been deleted")
+    delay_seconds = delay_ms / 1000.0
+    timer = threading.Timer(delay_seconds, delete_key)
+    timer.start()
+
 def parse_resp(data):
     """Parse RESP data into command and arguments."""
+    print(data)
     parts = data.decode().split('\r\n')
+    print(parts)
     command = None
     args = []
     for i, part in enumerate(parts):
@@ -19,6 +30,8 @@ def parse_resp(data):
         else:
             # Subsequent lines are arguments
             args.append(part)
+    print("args: ")
+    print(args)
     return command, args
 
 def handle_client(conn, addr):
@@ -40,8 +53,13 @@ def handle_client(conn, addr):
             conn.send(b"+PONG\r\n")
 # ====================================================================
         elif command == "set" and len(args) >= 2:
-            key, value = args[0], " ".join(args[1:]).strip()
-            datastore[key] = value.strip()
+            print("set command called")
+            key, value, time = args[0], args[1].strip(), None
+            if len(args) >= 4 and args[2].lower().strip() == "px":
+                time = int(args[3].strip())
+            datastore[key] = value
+            if time is not None:
+                delete_key_after_delay(key, time)
             conn.send(b"+OK\r\n")
 # ====================================================================
         elif command == "get":
