@@ -6,7 +6,14 @@ data_store = {}
 
 def addDataStream(stream_key, entry_id, *key_value_pairs):
     if stream_key not in data_store:
-        data_store[stream_key] = {"value": [], "type": "stream"}
+        data_store[stream_key] = {"type": "stream", "value": []}
+    last_entry_id = data_store[stream_key]["value"][-1]["id"] if data_store[stream_key]["value"] else "0-0"
+    last_ms, last_seq = map(int, last_entry_id.split("-"))
+    current_ms, current_seq = map(int, entry_id.split("-"))
+    if current_ms == 0 and current_seq == 0:
+        return "-ERR The ID must be greater than 0-0\r\n"
+    if current_ms < last_ms or (current_ms == last_ms and current_seq <= last_seq):
+        return "-ERR The ID is equal to or smaller than the last item in the target stream\r\n"
     entry = {"id": entry_id}
     for i in range(0, len(key_value_pairs), 2):
         key = key_value_pairs[i]
@@ -48,6 +55,7 @@ def parse_resp(data):
     return command, args
 
 def handle_client(conn, addr):
+    
     """Handle a client connection."""
     print(f"New connection established from {addr}")
     while True:
@@ -80,7 +88,7 @@ def handle_client(conn, addr):
             # but the data_store went from {"banana":"pineapple"} to {"banana": {"value": pineapple, "type": "string"}}
             key = args[0] if args else ""
             item = data_store.get(key, {"value":"", "type": "none"})
-            if item["type"] is not "none":
+            if item["type"] != "none":
                 value = item["value"]
                 response = f"${len(value)}\r\n{value}\r\n"
             else:
@@ -98,14 +106,18 @@ def handle_client(conn, addr):
 # ====================================================================
         elif command == "xadd":
             print("Processing XADD command")  # Debugging print
-            if len(args) < 4 or len(args) % 2 != 0:
+            if len(args) < 4 or len(args) % 2 != 0: 
                 response = "-ERR Wrong number of arguments for 'xadd' command\r\n"
             else:
                 stream_key = args[0]
                 entry_id = args[1]
                 key_value_pairs = args[2:]
+                response = "-ERR entry_id cannot be less than 0" 
                 added_entry_id = addDataStream(stream_key, entry_id, *key_value_pairs)  # Make sure this is correct
-                response = f"${len(added_entry_id)}\r\n{added_entry_id}\r\n"
+                if added_entry_id.startswith("-ERR"):
+                    response = added_entry_id # Error response
+                else:
+                    response = f"${len(added_entry_id)}\r\n{added_entry_id}\r\n"
                 print(f"XADD response: {response}")  # Debugging print
                 print(data_store)
             conn.send(response.encode())
