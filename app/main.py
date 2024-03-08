@@ -11,7 +11,10 @@ def addDataStream(stream_key, entry_id, *key_value_pairs):
     last_ms, last_seq = map(int, last_entry_id.split("-"))
     current_ms, current_seq = entry_id.split("-")
     if current_seq == "*":
-        current_seq = last_seq + 1
+        if current_ms > last_ms:
+            current_seq = 0
+        else:
+            current_seq = last_seq + 1
         entry_id = f"{current_ms}-{current_seq}"
     else:
         current_seq = int(current_seq)
