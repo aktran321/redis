@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 
 # Initialize the data_store for storing key-value pairs
 data_store = {}
@@ -9,16 +10,14 @@ def addDataStream(stream_key, entry_id, *key_value_pairs):
         data_store[stream_key] = {"type": "stream", "value": []}
     last_entry_id = data_store[stream_key]["value"][-1]["id"] if data_store[stream_key]["value"] else "0-0"
     last_ms, last_seq = map(int, last_entry_id.split("-"))
-    current_ms, current_seq = entry_id.split("-")
-    current_ms = int(current_ms)
-    if current_seq == "*":
-        if current_ms > last_ms:
-            current_seq = 0
-        else:
+    if entry_id == "*":
+        current_ms = time.time() * 1000
+        current_seq = 0
+        if current_ms == last_ms:
             current_seq = last_seq + 1
         entry_id = f"{current_ms}-{current_seq}"
     else:
-        current_seq = int(current_seq)
+        current_ms, current_seq = map(int, entry_id.split("-"))
     if current_ms == 0 and current_seq == 0:
         return "-ERR The ID specified in XADD must be greater than 0-0\r\n"
     if current_ms < last_ms or (current_ms == last_ms and current_seq <= last_seq):
