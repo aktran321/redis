@@ -76,9 +76,12 @@ def handle_client(conn, addr):
             conn.send(b"+OK\r\n")
 # ====================================================================
         elif command == "get":
+            # when get is called: redis-cli get banana ... we expect $9\r\npineapple\r\n
+            # but the data_store went from {"banana":"pineapple"} to {"banana": {"value": pineapple, "type": "string"}}
             key = args[0] if args else ""
-            value = data_store.get(key, None)
-            if value is not None:
+            item = data_store.get(key, {"value":"", "type": "none"})
+            if item["type"] is not "none":
+                value = item["value"]
                 response = f"${len(value)}\r\n{value}\r\n"
             else:
                 response = "$-1\r\n"
