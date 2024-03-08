@@ -11,9 +11,9 @@ def addDataStream(stream_key, entry_id, *key_value_pairs):
     last_ms, last_seq = map(int, last_entry_id.split("-"))
     current_ms, current_seq = map(int, entry_id.split("-"))
     if current_ms == 0 and current_seq == 0:
-        return "-ERR The ID must be greater than 0-0\r\n"
+        return "-ERR The ID specified in XADD must be greater than 0-0\r\n"
     if current_ms < last_ms or (current_ms == last_ms and current_seq <= last_seq):
-        return "-ERR The ID is equal to or smaller than the last item in the target stream\r\n"
+        return "-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n"
     entry = {"id": entry_id}
     for i in range(0, len(key_value_pairs), 2):
         key = key_value_pairs[i]
@@ -111,8 +111,7 @@ def handle_client(conn, addr):
             else:
                 stream_key = args[0]
                 entry_id = args[1]
-                key_value_pairs = args[2:]
-                response = "-ERR entry_id cannot be less than 0" 
+                key_value_pairs = args[2:] 
                 added_entry_id = addDataStream(stream_key, entry_id, *key_value_pairs)  # Make sure this is correct
                 if added_entry_id.startswith("-ERR"):
                     response = added_entry_id # Error response
