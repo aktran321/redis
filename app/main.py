@@ -1,13 +1,25 @@
 import socket
 import threading
 
-# Initialize the datastore for storing key-value pairs
-datastore = {}
+# Initialize the data_store for storing key-value pairs
+data_store = {}
+
+def addDataStream(stream_key, entry_id, *key_value_pairs):
+    if stream_key not in data_store:
+        data_store[stream_key] = []
+    entry = {"id": entry_id}
+    for i in range(0, len(key_value_pairs), 2):
+        key = key_value_pairs[i]
+        value = key_value_pairs[i+1]
+        entry[key] = value
+    data_store[stream_key].append(entry)
+    return entry["id"]
+    
 
 def delete_key_after_delay(key, delay_ms):
     def delete_key():
-        if key in datastore:
-            del datastore[key]
+        if key in data_store:
+            del data_store[key]
             print(f"Key {key} has been deleted")
     delay_seconds = delay_ms / 1000.0
     timer = threading.Timer(delay_seconds, delete_key)
@@ -30,6 +42,7 @@ def parse_resp(data):
         else:
             # Subsequent lines are arguments
             args.append(part)
+    args = args[:-1]
     print("args: ")
     print(args)
     return command, args
@@ -57,14 +70,14 @@ def handle_client(conn, addr):
             key, value, time = args[0], args[1].strip(), None
             if len(args) >= 4 and args[2].lower().strip() == "px":
                 time = int(args[3].strip())
-            datastore[key] = value
+            data_store[key] = value
             if time is not None:
                 delete_key_after_delay(key, time)
             conn.send(b"+OK\r\n")
 # ====================================================================
         elif command == "get":
             key = args[0] if args else ""
-            value = datastore.get(key, None)
+            value = data_store.get(key, None)
             if value is not None:
                 response = f"${len(value)}\r\n{value}\r\n"
             else:
@@ -73,10 +86,27 @@ def handle_client(conn, addr):
 # ====================================================================
         elif command == "type":
             key = args[0] if args else ""
-            if key in datastore:
+            if key in data_store:
                 conn.send(b"+string\r\n") 
             else:
                 return conn.send(b"+none\r\n")
+# ====================================================================
+        elif command == "xadd":
+            print("Processing XADD command")  # Debugging print
+            if len(args) < 4 or len(args) % 2 != 0:
+                response = "-ERR Wrong number of arguments for 'xadd' command\r\n"
+            else:
+                stream_key = args[0]
+                entry_id = args[1]
+                key_value_pairs = args[2:]
+                added_entry_id = addDataStream(stream_key, entry_id, *key_value_pairs)  # Make sure this is correct
+                response = f"${len(added_entry_id)}\r\n{added_entry_id}\r\n"
+                print(f"XADD response: {response}")  # Debugging print
+                print(data_store)
+            conn.send(response.encode())
+            print("Response sent for XADD command")  # Debugging print
+
+
 # ====================================================================
         else:
             print(f"Received unsupported command: {command}")
