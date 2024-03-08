@@ -89,8 +89,8 @@ def handle_client(conn, addr):
             if key in data_store:
                 if len(data_store[key]) == 1:
                     conn.send(b"+string\r\n") 
-                elif len(data_store[key]) > 1:
-                    conn.send(b"+string\r\n")
+                elif data_store[key][0]:
+                    conn.send(b"+stream\r\n")
             else:
                 return conn.send(b"+none\r\n")
 # ====================================================================
