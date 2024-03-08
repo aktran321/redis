@@ -60,6 +60,10 @@ def parse_resp(data):
         else:
             # Subsequent lines are arguments
             args.append(part)
+    if command == "xadd" and "*" in data.decode():
+        ast = data.decode().find("*")
+        if ast != -1: 
+            args.insert(1, "*")
     args = args[:-1]
     print("args: ")
     print(args)
