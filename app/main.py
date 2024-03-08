@@ -6,13 +6,13 @@ data_store = {}
 
 def addDataStream(stream_key, entry_id, *key_value_pairs):
     if stream_key not in data_store:
-        data_store[stream_key] = []
+        data_store[stream_key] = {"value": [], "type": "stream"}
     entry = {"id": entry_id}
     for i in range(0, len(key_value_pairs), 2):
         key = key_value_pairs[i]
         value = key_value_pairs[i+1]
         entry[key] = value
-    data_store[stream_key].append(entry)
+    data_store[stream_key]["value"].append(entry)
     return entry["id"]
     
 
@@ -70,7 +70,7 @@ def handle_client(conn, addr):
             key, value, time = args[0], args[1].strip(), None
             if len(args) >= 4 and args[2].lower().strip() == "px":
                 time = int(args[3].strip())
-            data_store[key] = value
+            data_store[key] = {"value": value, "type": "string"}
             if time is not None:
                 delete_key_after_delay(key, time)
             conn.send(b"+OK\r\n")
@@ -87,12 +87,11 @@ def handle_client(conn, addr):
         elif command == "type":
             key = args[0] if args else ""
             if key in data_store:
-                if len(data_store[key]) == 1:
-                    conn.send(b"+string\r\n") 
-                elif len(data_store[key][0]) > 1:
-                    conn.send(b"+stream\r\n")
+                data_type = data_store[key]["type"]
+                response = f"+{data_type}\r\n"
             else:
-                return conn.send(b"+none\r\n")
+                response = conn.send(b"+none\r\n")
+            conn.send(response.encode())
 # ====================================================================
         elif command == "xadd":
             print("Processing XADD command")  # Debugging print
