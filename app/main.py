@@ -10,14 +10,17 @@ def addDataStream(stream_key, entry_id, *key_value_pairs):
         data_store[stream_key] = {"type": "stream", "value": []}
     last_entry_id = data_store[stream_key]["value"][-1]["id"] if data_store[stream_key]["value"] else "0-0"
     last_ms, last_seq = map(int, last_entry_id.split("-"))
+
     if entry_id == "*":
-        current_ms = time.time() * 1000
-        current_seq = 0
-        if current_ms == last_ms:
-            current_seq = last_seq + 1
+        current_ms = int(time.time() * 1000)
+        current_seq = last_seq + 1 if last_ms == current_ms else 0 # Increment seq if ms are the same
         entry_id = f"{current_ms}-{current_seq}"
     else:
-        current_ms, current_seq = map(int, entry_id.split("-"))
+        parts = entry_id.split("-")
+        current_ms = int(parts[0]) if parts[0].isdigit() else int(time.time() * 1000)
+        current_seq = int(parts[1]) if len(parts) > 1 and parts[1] != "*" else last_seq + 1 if last_ms == current_ms else 0
+        entry_id = f"{current_ms}-{current_seq}"
+
     if current_ms == 0 and current_seq == 0:
         return "-ERR The ID specified in XADD must be greater than 0-0\r\n"
     if current_ms < last_ms or (current_ms == last_ms and current_seq <= last_seq):
