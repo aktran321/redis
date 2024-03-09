@@ -48,9 +48,18 @@ def parse_resp(data):
     print(data)
     parts = data.decode().split('\r\n')
     print(parts)
-    command = None
+    command = parts[2].lower()
     args = []
+
+
+    lookingForAst = command == "xadd"
+    astFound = False
+
     for i, part in enumerate(parts):
+        if lookingForAst and part == "*" and not astFound:
+            args.append(part)
+            astFound = True
+            continue # Skip the rest of the loop for this iteration
         if part.startswith('*') or part.startswith('$'):
             # Skip lines that start with '*' (arrays) or '$' (bulk strings)
             continue
@@ -60,13 +69,10 @@ def parse_resp(data):
         else:
             # Subsequent lines are arguments
             args.append(part)
-    if command == "xadd" and "*" in data.decode():
-        ast = data.decode().find("*")
-        if ast != -1: 
-            args.insert(1, "*")
-    args = args[:-1]
-    print("args: ")
-    print(args)
+    if args and args[-1] == "":
+        args = args[:-1]
+        print("args: ")
+        print(args)
     return command, args
 
 def handle_client(conn, addr):
