@@ -63,9 +63,8 @@ def parse_resp(data):
         if part.startswith('*') or part.startswith('$'):
             # Skip lines that start with '*' (arrays) or '$' (bulk strings)
             continue
-        elif command is None:
-            # The first non-special line is the command
-            command = part.lower()
+        elif i < 3:
+            continue
         else:
             # Subsequent lines are arguments
             args.append(part)
