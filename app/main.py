@@ -244,8 +244,9 @@ def handle_client(conn, addr):
             print("Full response for xrange: ")
             print(response)
             
+            conn.send(response.encode())
+            print("Response for xrange sent")
             # response = f"*2\r\n*2\r\n$15\r\n{""}\r\n*4\r\n$11\r\ntemperature\r\n$2\r\n36\r\n$8\r\nhumidity\r\n$2\r\n95\r\n*2\r\n$15\r\n{""}-9\r\n*4\r\n$11\r\ntemperature\r\n$2\r\n37\r\n$8\r\nhumidity\r\n$2\r\n94\r\n"
-            return
 # ====================================================================
         else:
             print(f"Received unsupported command: {command}")
