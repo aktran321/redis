@@ -153,7 +153,7 @@ def handle_client(conn, addr):
                 seq_id_1 = 0
             else:
                 time_id_1, seq_id_1 = map(int, args[1].split("-"))
-            if id2 == "-":
+            if  id2 == "+":
                 time_id_2, seq_id_2 = 9999999999999, 9
             elif "-" not in id2:
                 time_id_2 = int(id2)
