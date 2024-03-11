@@ -212,7 +212,77 @@ def handle_client(conn, addr):
             conn.send(response.encode())
             print("Response for xrange sent")
             # response = f"*2\r\n*2\r\n$15\r\n{""}\r\n*4\r\n$11\r\ntemperature\r\n$2\r\n36\r\n$8\r\nhumidity\r\n$2\r\n95\r\n*2\r\n$15\r\n{""}-9\r\n*4\r\n$11\r\ntemperature\r\n$2\r\n37\r\n$8\r\nhumidity\r\n$2\r\n94\r\n"
-# ====================================================================
+            
+        # ====================================================================
+        elif command == "xread":
+            # similar to xrange, but it only takes one argument and is exclusive
+            # only entries with an ID greater than what is provided are shown
+
+            # $ redis-cli xread streams some_key 1526985054069-0
+            #                    0,       1,        2
+
+
+            # below response assumes that there is only one entry, and that entry has an ID, and Temperature and Humidity for Keys.
+            # and this also returns the Key that we want to read from which is interesting
+            # *1 \r\n *2 \r\n $8 \r\n some_key \r\n *1\r\n *2 \r\n $15 \r\n 1526985054079-0 \r\n *4 \r\n $11 \r\n temperature \r\n $2 \r\n 37 \r\n $8 \r\n humidity \r\n $2 \r\n 94 \r\n
+            # *1 = (variable) # of streams we are reading from
+            # *2 => (constant) the first element is the stream we are reading from [] , then its a list that will hold the id and key value pairs[]
+            # *1 => (variable) number of entries/ids we got
+            # *2 => (constant), the first is the ID of the entry, the second is a list, that will contain all key value pairs as just elements in the list
+            # *4 => (variable), # of keys and values... should always be an even number
+
+            # ok we have broken down the response, now lets figure out how we reconstruct it
+            # take in your arguments
+
+            # example data
+
+            # {'pineapple': {'type': 'stream', 'value': [{'id': '0-1', 'foo': 'bar', 'thus': "that"}, {'id': '0-2', 'foo': 'bar'}, {'id': '0-3', 'foo': 'bar'}]}}
+
+
+            dType, key, id = args[0], args[1], args[2]
+            # now lets split the ID again
+            ms_id, seq_id = map(int, id.split("-"))
+            if data_store[key]["type"] == dType:
+                # then okay lets start building a response...
+                response = ""
+                nu_of_valid_entries = 0
+                for entry in data_store[key]["value"]:
+                    # looping through the array of entries
+                    # must validate the id's
+                    entry_id = entry["id"] 
+                    entry_ms, entry_seq = map(int, entry_id.split("-"))
+                    if entry_seq < seq_id or (entry_seq == seq_id and entry_ms <= ms_id):
+                        # if the id is out of range, dont include... move on
+                        continue
+                    else:
+                        nu_of_valid_entries += 1
+                        # now we have to construct combined response
+                        # this is for the array with key/value pairs for elements, which will be a variable even number
+                        
+                        combined_response = ""
+                        entry_response = ""
+                        nu_of_kv = 0
+                        for i in entry:
+                            for key, value in entry[i].items():
+                                if key != "id":
+                                    # append the key and value 
+                                    nu_of_kv += 2
+                                    entry_response += f"${len(key)}\r\n{key}\r\n${len(value)}\r\n{value}\r\n"
+                                else:
+                                    continue
+                            entry_response = f"*{nu_of_kv}\r\n" + entry_response
+                            combined_response += f"*2\r\n${len(entry_id)}\r\n{entry_id}" + entry_response
+                        
+                        
+                response = f"*1\r\n*2\r\n${len(key)}\r\n{key}\r\n*{nu_of_valid_entries}r\n" + combined_response
+            conn.send(response.encode())
+
+
+
+
+                        
+
+        # ====================================================================
         else:
             print(f"Received unsupported command: {command}")
             # Optionally send an error response to the client
