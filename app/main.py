@@ -262,16 +262,16 @@ def handle_client(conn, addr):
                         combined_response = ""
                         entry_response = ""
                         nu_of_kv = 0
-                        for i in entry:
-                            for key, value in entry[i].items():
-                                if key != "id":
-                                    # append the key and value 
-                                    nu_of_kv += 2
-                                    entry_response += f"${len(key)}\r\n{key}\r\n${len(value)}\r\n{value}\r\n"
-                                else:
-                                    continue
-                            entry_response = f"*{nu_of_kv}\r\n" + entry_response
-                            combined_response += f"*2\r\n${len(entry_id)}\r\n{entry_id}" + entry_response
+                        
+                        for key, value in entry.items():
+                            if key != "id":
+                                # append the key and value 
+                                nu_of_kv += 2
+                                entry_response += f"${len(key)}\r\n{key}\r\n${len(value)}\r\n{value}\r\n"
+                            else:
+                                continue
+                        entry_response = f"*{nu_of_kv}\r\n" + entry_response
+                        combined_response += f"*2\r\n${len(entry_id)}\r\n{entry_id}" + entry_response
                         
                         
                 response = f"*1\r\n*2\r\n${len(key)}\r\n{key}\r\n*{nu_of_valid_entries}r\n" + combined_response
