@@ -143,54 +143,19 @@ def handle_client(conn, addr):
             print("Response sent for XADD command")  # Debugging print
 
 # ====================================================================
+        # now we have to account for the "-" for args[1] and args[2]
         elif command == "xrange":
-            # so what we are doing
-
-            # creating a response
-            # we take the arguamnets from the client
-            # and then make sure to add seq numbers if needed
-            # so we clearly define our range
-            # 
-            # now we ahve to construct our response which is a somewhat complicated RESP response
-            # 
-            # the first *# 
-            # is variable... this depends on how many entries fit in our range
-
-            # the second *# is once we have identified an id in our range
-            # this second *# will always be *2
-            # the two elements being the ID of the entry, and then a list of all the other key/value pairs in the object/entry
-
-
-            # so i created a loop, to go through the entire stream
-                # Looking for an ID in our range, once we find one
-                # we loop inside there too, 
-                    # we go through the key value pairs
-                    # we want to finish this loop with somehitng like...
-                    # *2\r\n$15\r\n{""}\r\n*4\r\n$11\r\ntemperature\r\n$2\r\n36\r\n$8\r\nhumidity\r\n$2\r\n95\r\n
-                # assuming theres another id in our range, we might get another
-                    # *2\r\n$15\r\n{""}\r\n*4\r\n$11\r\ntemperature\r\n$2\r\n36\r\n$8\r\nhumidity\r\n$2\r\n95\r\n
-            
-            # once thats done, combine them
-            # then construct *#\r\n
-            
-
-
-
-
-
-            # {'some_key': {'type': 'stream', 'value': [{'id': '1710010933878-0', 'temp': '1', 'height': '5'}, {'id': '1710010939384-0', 'temp': '1', 'height': '5'}]}}
-            # so the range needs to get to data_store["some_key"]["value"] = [{stream_entry},{se},{se},{se},{se}]
-            
-            # ====================================================================
-            # ====================================================================
-            # setting variables
             key, id1, id2 = args[0], args[1], args[2]
-            if "-" not in id1:
+            if id1 == "-":
+                time_id_1, seq_id_1 = 0, 0
+            elif "-" not in id1:
                 time_id_1 = int(id1)
                 seq_id_1 = 0
             else:
                 time_id_1, seq_id_1 = map(int, args[1].split("-"))
-            if "-" not in id2:
+            if id2 == "-":
+                time_id_2, seq_id_2 = 9999999999999, 9
+            elif "-" not in id2:
                 time_id_2 = int(id2)
                 seq_id_2 = 9
             else:
