@@ -275,6 +275,7 @@ def handle_client(conn, addr):
                         
                         
                 response = f"*1\r\n*2\r\n${len(key)}\r\n{key}\r\n*{nu_of_valid_entries}r\n" + combined_response
+                print(response)
             conn.send(response.encode())
 
 
