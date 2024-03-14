@@ -4,6 +4,45 @@ import time
 
 # Initialize the data_store for storing key-value pairs
 data_store = {}
+def createXreadResponse(dType, stream_key, id):
+    # now lets split the ID again
+    # [streams, stream_key, 0-0]
+    ms_id, seq_id = map(int, id.split("-"))
+    if data_store[stream_key]["type"] == dType or dType =="streams" or dType == "stream":
+        # then okay lets start building a response...
+        response = ""
+        nu_of_valid_entries = 0
+        for entry in data_store[stream_key]["value"]:
+            # looping through the array of entries
+            # must validate the id's
+            entry_id = entry["id"] 
+            entry_ms, entry_seq = map(int, entry_id.split("-"))
+            if entry_seq < seq_id or (entry_seq == seq_id and entry_ms <= ms_id):
+                # if the id is out of range, dont include... move on
+                continue
+            else:
+                nu_of_valid_entries += 1
+                # now we have to construct combined response
+                # this is for the array with key/value pairs for elements, which will be a variable even number
+                
+                combined_response = ""
+                entry_response = ""
+                nu_of_kv = 0
+                
+                for key, value in entry.items():
+                    if key != "id":
+                        # append the key and value 
+                        nu_of_kv += 2
+                        entry_response += f"${len(key)}\r\n{key}\r\n${len(value)}\r\n{value}\r\n" #  $11\r\n$temperature\r\n$2\r\n96\r\n
+                    else:
+                        continue
+                entry_response = f"*{nu_of_kv}\r\n" + entry_response # *2
+                combined_response += f"*2\r\n${len(entry_id)}\r\n{entry_id}\r\n" + entry_response
+                
+                
+        response = f"*2\r\n${len(stream_key)}\r\n{stream_key}\r\n*{nu_of_valid_entries}\r\n" + combined_response
+        print(response)
+    return response
 
 def addDataStream(stream_key, entry_id, *key_value_pairs):
     if stream_key not in data_store:
@@ -240,44 +279,32 @@ def handle_client(conn, addr):
             # {'stream_key': {'type': 'streams', 'value': [{'id': '0-1', 'temperature': '96'}]}}
 
 
-            dType, stream_key, id = args[0], args[1], args[2]
-            # now lets split the ID again
-            # [streams, stream_key, 0-0]
-            ms_id, seq_id = map(int, id.split("-"))
-            if data_store[stream_key]["type"] == dType or dType =="streams" or dType == "stream":
-                # then okay lets start building a response...
-                response = ""
-                nu_of_valid_entries = 0
-                for entry in data_store[stream_key]["value"]:
-                    # looping through the array of entries
-                    # must validate the id's
-                    entry_id = entry["id"] 
-                    entry_ms, entry_seq = map(int, entry_id.split("-"))
-                    if entry_seq < seq_id or (entry_seq == seq_id and entry_ms <= ms_id):
-                        # if the id is out of range, dont include... move on
-                        continue
-                    else:
-                        nu_of_valid_entries += 1
-                        # now we have to construct combined response
-                        # this is for the array with key/value pairs for elements, which will be a variable even number
-                        
-                        combined_response = ""
-                        entry_response = ""
-                        nu_of_kv = 0
-                        
-                        for key, value in entry.items():
-                            if key != "id":
-                                # append the key and value 
-                                nu_of_kv += 2
-                                entry_response += f"${len(key)}\r\n{key}\r\n${len(value)}\r\n{value}\r\n" #  $11\r\n$temperature\r\n$2\r\n96\r\n
-                            else:
-                                continue
-                        entry_response = f"*{nu_of_kv}\r\n" + entry_response # *2
-                        combined_response += f"*2\r\n${len(entry_id)}\r\n{entry_id}\r\n" + entry_response
-                        
-                        
-                response = f"*1\r\n*2\r\n${len(stream_key)}\r\n{stream_key}\r\n*{nu_of_valid_entries}\r\n" + combined_response
-                print(response)
+            # so now we can either have 
+            # xread streams key 0-0
+            # or 
+            # xread streams stream_key other_stream_key 0-0 0-1
+            # 
+            # so for our arguments, we would go from [streams, stream_key, 0-0] to [streams, steam_key, other_stream_key, 0-0, 0-1]
+
+            # so in one case we have len(args) == 3, and the other len(args) == 5
+            
+            # so lets separate the implementation
+            
+            # Single stream read
+            if len(args) == 3:
+                dType, stream_key, id = args[0], args[1], args[2]
+                response = f"*1\r\n" + createXreadResponse(dType, stream_key, id)
+
+            # example data) 
+            #{'stream_key': {'type': 'stream', 'value': [{'id': '0-1', 'temperature': '95'}]}, 'other_stream_key': {'type': 'stream', 'value': [{'id': '0-2', 'humidity': '97'}]}}
+            # example args
+            # 
+            elif len(args) == 5:
+                dType, key1, key2, id1, id2 = args[0], args[1], args[2], args[3], args[4]
+                response1, response2 = createXreadResponse(dType, key1, id1), createXreadResponse(dType, key2, id2)
+                response = f"*2\r\n" + response1 + response2
+            else:
+                response = "-ERR invalid number of arguments"
             conn.send(response.encode())
 
 
