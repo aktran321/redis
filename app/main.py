@@ -244,7 +244,7 @@ def handle_client(conn, addr):
             # now lets split the ID again
             # [streams, stream_key, 0-0]
             ms_id, seq_id = map(int, id.split("-"))
-            if data_store[stream_key]["type"] == dType:
+            if data_store[stream_key]["type"] == dType or dType =="streams" or dType == "stream":
                 # then okay lets start building a response...
                 response = ""
                 nu_of_valid_entries = 0
