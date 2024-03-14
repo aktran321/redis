@@ -7,7 +7,7 @@ data_store = {}
 
 def addDataStream(stream_key, entry_id, *key_value_pairs):
     if stream_key not in data_store:
-        data_store[stream_key] = {"type": "streams", "value": []}
+        data_store[stream_key] = {"type": "stream", "value": []}
     last_entry_id = data_store[stream_key]["value"][-1]["id"] if data_store[stream_key]["value"] else "0-0"
     last_ms, last_seq = map(int, last_entry_id.split("-"))
 
