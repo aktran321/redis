@@ -7,7 +7,7 @@ data_store = {}
 
 def addDataStream(stream_key, entry_id, *key_value_pairs):
     if stream_key not in data_store:
-        data_store[stream_key] = {"type": "stream", "value": []}
+        data_store[stream_key] = {"type": "streams", "value": []}
     last_entry_id = data_store[stream_key]["value"][-1]["id"] if data_store[stream_key]["value"] else "0-0"
     last_ms, last_seq = map(int, last_entry_id.split("-"))
 
@@ -237,16 +237,18 @@ def handle_client(conn, addr):
             # example data
 
             # {'pineapple': {'type': 'stream', 'value': [{'id': '0-1', 'foo': 'bar', 'thus': "that"}, {'id': '0-2', 'foo': 'bar'}, {'id': '0-3', 'foo': 'bar'}]}}
+            # {'stream_key': {'type': 'streams', 'value': [{'id': '0-1', 'temperature': '96'}]}}
 
 
-            dType, key, id = args[0], args[1], args[2]
+            dType, stream_key, id = args[0], args[1], args[2]
             # now lets split the ID again
+            # [streams, stream_key, 0-0]
             ms_id, seq_id = map(int, id.split("-"))
-            if data_store[key]["type"] == dType:
+            if data_store[stream_key]["type"] == dType:
                 # then okay lets start building a response...
                 response = ""
                 nu_of_valid_entries = 0
-                for entry in data_store[key]["value"]:
+                for entry in data_store[stream_key]["value"]:
                     # looping through the array of entries
                     # must validate the id's
                     entry_id = entry["id"] 
@@ -267,14 +269,14 @@ def handle_client(conn, addr):
                             if key != "id":
                                 # append the key and value 
                                 nu_of_kv += 2
-                                entry_response += f"${len(key)}\r\n{key}\r\n${len(value)}\r\n{value}\r\n"
+                                entry_response += f"${len(key)}\r\n{key}\r\n${len(value)}\r\n{value}\r\n" #  $11\r\n$temperature\r\n$2\r\n96\r\n
                             else:
                                 continue
-                        entry_response = f"*{nu_of_kv}\r\n" + entry_response
+                        entry_response = f"*{nu_of_kv}\r\n" + entry_response # *2
                         combined_response += f"*2\r\n${len(entry_id)}\r\n{entry_id}\r\n" + entry_response
                         
                         
-                response = f"*1\r\n*2\r\n${len(key)}\r\n{key}\r\n*{nu_of_valid_entries}\r\n" + combined_response
+                response = f"*1\r\n*2\r\n${len(stream_key)}\r\n{stream_key}\r\n*{nu_of_valid_entries}\r\n" + combined_response
                 print(response)
             conn.send(response.encode())
 
