@@ -40,8 +40,10 @@ def createXreadResponse(dType, stream_key, id):
                 entry_response = f"*{nu_of_kv}\r\n" + entry_response # *2
                 combined_response += f"*2\r\n${len(entry_id)}\r\n{entry_id}\r\n" + entry_response
                 
-                
-        response = f"*2\r\n${len(stream_key)}\r\n{stream_key}\r\n*{nu_of_valid_entries}\r\n" + combined_response
+        if combined_response:
+            response = f"*2\r\n${len(stream_key)}\r\n{stream_key}\r\n*{nu_of_valid_entries}\r\n" + combined_response
+        else:
+            response = f"$-1\r\n"
         print(response)
     return response
 
