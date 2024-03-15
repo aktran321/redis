@@ -2,6 +2,7 @@ import socket
 import threading
 import time
 
+data_arrival_condition = threading.Condition()
 # Initialize the data_store for storing key-value pairs
 data_store = {}
 def createXreadResponse(dType, stream_key, id):
@@ -45,6 +46,7 @@ def createXreadResponse(dType, stream_key, id):
     return response
 
 def addDataStream(stream_key, entry_id, *key_value_pairs):
+    global data_arrival_condition 
     if stream_key not in data_store:
         data_store[stream_key] = {"type": "stream", "value": []}
     last_entry_id = data_store[stream_key]["value"][-1]["id"] if data_store[stream_key]["value"] else "0-0"
@@ -69,7 +71,9 @@ def addDataStream(stream_key, entry_id, *key_value_pairs):
         key = key_value_pairs[i]
         value = key_value_pairs[i+1]
         entry[key] = value
-    data_store[stream_key]["value"].append(entry)
+    with data_arrival_condition:
+        data_store[stream_key]["value"].append(entry)
+        data_arrival_condition.notify_all()
     return entry["id"]
     
 
@@ -254,42 +258,6 @@ def handle_client(conn, addr):
             
         # ====================================================================
         elif command == "xread":
-            # similar to xrange, but it only takes one argument and is exclusive
-            # only entries with an ID greater than what is provided are shown
-
-            # $ redis-cli xread streams some_key 1526985054069-0
-            #                    0,       1,        2
-
-
-            # below response assumes that there is only one entry, and that entry has an ID, and Temperature and Humidity for Keys.
-            # and this also returns the Key that we want to read from which is interesting
-            # *1 \r\n *2 \r\n $8 \r\n some_key \r\n *1\r\n *2 \r\n $15 \r\n 1526985054079-0 \r\n *4 \r\n $11 \r\n temperature \r\n $2 \r\n 37 \r\n $8 \r\n humidity \r\n $2 \r\n 94 \r\n
-            # *1 = (variable) # of streams we are reading from
-            # *2 => (constant) the first element is the stream we are reading from [] , then its a list that will hold the id and key value pairs[]
-            # *1 => (variable) number of entries/ids we got
-            # *2 => (constant), the first is the ID of the entry, the second is a list, that will contain all key value pairs as just elements in the list
-            # *4 => (variable), # of keys and values... should always be an even number
-
-            # ok we have broken down the response, now lets figure out how we reconstruct it
-            # take in your arguments
-
-            # example data
-
-            # {'pineapple': {'type': 'stream', 'value': [{'id': '0-1', 'foo': 'bar', 'thus': "that"}, {'id': '0-2', 'foo': 'bar'}, {'id': '0-3', 'foo': 'bar'}]}}
-            # {'stream_key': {'type': 'streams', 'value': [{'id': '0-1', 'temperature': '96'}]}}
-
-
-            # so now we can either have 
-            # xread streams key 0-0
-            # or 
-            # xread streams stream_key other_stream_key 0-0 0-1
-            # 
-            # so for our arguments, we would go from [streams, stream_key, 0-0] to [streams, steam_key, other_stream_key, 0-0, 0-1]
-
-            # so in one case we have len(args) == 3, and the other len(args) == 5
-            
-            # so lets separate the implementation
-            
             # Single stream read
             if len(args) == 3:
                 dType, stream_key, id = args[0], args[1], args[2]
@@ -299,6 +267,25 @@ def handle_client(conn, addr):
             #{'stream_key': {'type': 'stream', 'value': [{'id': '0-1', 'temperature': '95'}]}, 'other_stream_key': {'type': 'stream', 'value': [{'id': '0-2', 'humidity': '97'}]}}
             # example args
             # 
+            elif len(args) == 5 and args[0] == "block":
+                wait_time, dType, stream_key, id = int(args[1]), args[2], args[3], args[4]
+                end_time = time.time() + wait_time / 1000.0
+
+                with data_arrival_condition:
+                    while True:
+                        response = f"*1\r\n" + createXreadResponse(dType, stream_key, id)
+                        if response != "-ERR no new data":
+                            break
+                        if time.time() >= end_time:
+                            response = "$-1\r\n"
+                            break
+                        remaining_time = end_time - time.time() 
+                        if remaining_time > 0:
+                            data_arrival_condition.wait(timeout=remaining_time)
+                        else:
+                            response = "$-1\r\n"
+                            break
+            
             elif len(args) == 5:
                 dType, key1, key2, id1, id2 = args[0], args[1], args[2], args[3], args[4]
                 response1, response2 = createXreadResponse(dType, key1, id1), createXreadResponse(dType, key2, id2)
