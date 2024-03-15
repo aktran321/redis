@@ -138,12 +138,12 @@ def handle_client(conn, addr):
 # ====================================================================
         elif command == "set" and len(args) >= 2:
             print("set command called")
-            key, value, time = args[0], args[1].strip(), None
+            key, value, delete_time = args[0], args[1].strip(), None
             if len(args) >= 4 and args[2].lower().strip() == "px":
-                time = int(args[3].strip())
+                delete_time = int(args[3].strip())
             data_store[key] = {"value": value, "type": "string"}
-            if time is not None:
-                delete_key_after_delay(key, time)
+            if delete_time is not None:
+                delete_key_after_delay(key, delete_time)
             conn.send(b"+OK\r\n")
 # ====================================================================
         elif command == "get":
@@ -269,7 +269,9 @@ def handle_client(conn, addr):
             # 
             elif len(args) == 5 and args[0] == "block":
                 wait_time, dType, stream_key, id = int(args[1]), args[2], args[3], args[4]
-                end_time = time.time() + wait_time / 1000.0
+                end_time = time.time() + wait_time / 1000.0 
+                print("block xread hit")
+                print("End Time: ", end_time)
 
                 with data_arrival_condition:
                     while True:
