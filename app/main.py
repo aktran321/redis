@@ -6,6 +6,7 @@ data_arrival_condition = threading.Condition()
 # Initialize the data_store for storing key-value pairs
 data_store = {}
 def createXreadResponse(dType, stream_key, id):
+    combined_response = ""
     # now lets split the ID again
     # [streams, stream_key, 0-0]
     ms_id, seq_id = map(int, id.split("-"))
