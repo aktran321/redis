@@ -272,19 +272,19 @@ def handle_client(conn, addr):
             # 
             elif len(args) == 5 and args[0] == "block":
                 wait_time, dType, stream_key, id = int(args[1]), args[2], args[3], args[4]
-                end_time = time.time() + wait_time / 1000.0 
+                end_time = time.time() + wait_time / 1000.0 if wait_time != 0 else None
                 print("block xread hit")
                 print("End Time: ", end_time)
 
                 with data_arrival_condition:
                     print("inside with data_arrival_condition boolean")
                     while True:
-                        if time.time() >= end_time:
+                        if end_time and time.time() >= end_time:
                             print("time has passed the end_time, so we are breaking the while loop")
                             response = "$-1\r\n"
                             break
-                        remaining_time = end_time - time.time() 
-                        if remaining_time > 0:
+                        remaining_time = end_time - time.time() if end_time else None
+                        if not remaining_time or remaining_time > 0:
                             data_arrival_condition.wait(timeout=remaining_time)
                             print("We have WOKEN UP")
                             response = f"*1\r\n" + createXreadResponse(dType, stream_key, id)
