@@ -106,7 +106,7 @@ def parse_resp(data):
             args.append(part)
             astFound = True
             continue # Skip the rest of the loop for this iteration
-        if part.startswith('*') or part.startswith('$'):
+        if part.startswith('*') or (part.startswith('$') and len(part) > 1):
             # Skip lines that start with '*' (arrays) or '$' (bulk strings)
             continue
         elif i < 3:
