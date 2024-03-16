@@ -286,7 +286,10 @@ def handle_client(conn, addr):
                         remaining_time = end_time - time.time() 
                         if remaining_time > 0:
                             data_arrival_condition.wait(timeout=remaining_time)
+                            print("We have WOKEN UP")
                             response = f"*1\r\n" + createXreadResponse(dType, stream_key, id)
+                            print(response)
+                            break
                         else:
                             print("break for no reason")
                             response = "$-1\r\n"
