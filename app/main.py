@@ -276,6 +276,7 @@ def handle_client(conn, addr):
                     # we want the id to be the most recent data with in the stream... sooo
                     if stream_key in data_store and data_store[stream_key]["value"]:
                         id = data_store[stream_key]["value"][-1]["id"]
+                        print("changed the value of ID")
                     else:
                         id = None
                 end_time = time.time() + wait_time / 1000.0 if wait_time != 0 else None
