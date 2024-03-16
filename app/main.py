@@ -272,6 +272,12 @@ def handle_client(conn, addr):
             # 
             elif len(args) == 5 and args[0] == "block":
                 wait_time, dType, stream_key, id = int(args[1]), args[2], args[3], args[4]
+                if id == "$":
+                    # we want the id to be the most recent data with in the stream... sooo
+                    if stream_key in data_store and data_store[stream_key]["value"]:
+                        id = data_store[stream_key]["value"][-1]["id"]
+                    else:
+                        id = None
                 end_time = time.time() + wait_time / 1000.0 if wait_time != 0 else None
                 print("block xread hit")
                 print("End Time: ", end_time)
