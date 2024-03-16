@@ -277,21 +277,23 @@ def handle_client(conn, addr):
                 print("End Time: ", end_time)
 
                 with data_arrival_condition:
+                    print("inside with data_arrival_condition boolean")
                     while True:
-                        response = f"*1\r\n" + createXreadResponse(dType, stream_key, id)
-                        if response != "-ERR no new data":
-                            break
                         if time.time() >= end_time:
+                            print("time has passed the end_time, so we are breaking the while loop")
                             response = "$-1\r\n"
                             break
                         remaining_time = end_time - time.time() 
                         if remaining_time > 0:
                             data_arrival_condition.wait(timeout=remaining_time)
+                            response = f"*1\r\n" + createXreadResponse(dType, stream_key, id)
                         else:
+                            print("break for no reason")
                             response = "$-1\r\n"
                             break
             
             elif len(args) == 5:
+                print("this should not be hitting if we use the BLOCK command")
                 dType, key1, key2, id1, id2 = args[0], args[1], args[2], args[3], args[4]
                 response1, response2 = createXreadResponse(dType, key1, id1), createXreadResponse(dType, key2, id2)
                 response = f"*2\r\n" + response1 + response2
