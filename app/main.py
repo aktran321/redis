@@ -337,7 +337,7 @@ def main():
     args = parse_arguments()
     port = args.port
     """Main function to start the server."""
-    server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
+    server_socket = socket.create_server(("localhost", port), reuse_port=True)
     print(f"Server is listening on port {port}")
     
     while True:
