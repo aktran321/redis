@@ -1,6 +1,8 @@
 import socket
 import threading
 import time
+import argparse
+import sys
 
 data_arrival_condition = threading.Condition()
 # Initialize the data_store for storing key-value pairs
@@ -325,10 +327,18 @@ def handle_client(conn, addr):
     conn.close()
     print(f"Connection closed with {addr}")
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Custom Redis Server")
+    parser.add_argument("--port", type=int, default=6379, help="Port number to start the Redis server on.")
+    args = parser.parse_args()
+    return args
+
 def main():
+    args = parse_arguments()
+    port = args.port
     """Main function to start the server."""
     server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
-    print("Server is listening on port 6379")
+    print(f"Server is listening on port {port}")
     
     while True:
         conn, addr = server_socket.accept()
