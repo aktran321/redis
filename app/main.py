@@ -318,7 +318,8 @@ def handle_client(conn, addr):
             if args[0] == "replication":
                 replication_info = "role:master\r\n"
                 length = len(replication_info.encode())
-                response = f"${length}\r\n{replication_info}"
+                response = f"${length}\r\n{replication_info}\r\n"
+                conn.send(response.encode())
             else:
                 response = "$-1\r\n"
             conn.send(response.encode())
