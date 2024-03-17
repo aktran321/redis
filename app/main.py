@@ -334,7 +334,7 @@ def handle_client(conn, addr):
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Custom Redis Server")
     parser.add_argument("--port", type=int, default=6379, help="Port number to start the Redis server on.")
-    parser.add_argument("--repicaof", type=str, nargs=2, help="Start as a replica of a master server")
+    parser.add_argument("--replicaof", type=str, nargs=2, help="Start as a replica of a master server")
     args = parser.parse_args()
     return args
 
