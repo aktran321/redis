@@ -356,20 +356,20 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             response = sock.recv(1024).decode('utf8')
             
             if response == "+PONG\r\n":
-                print("Response from master:", response.decode('utf-8'))
+                print("Response from master:", response)
             else:
                 print("Unexpected Reponse")
                 return # exit since PING failed
             replconf_listening_port = f"*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n${len(str(listening_port))}\r\n{listening_port}\r\n"
             sock.sendall(replconf_listening_port.encode('utf-8'))
 
-            response = sock.recv(1024)
+            response = sock.recv(1024).decode('utf-8')
             if response != "+OK\r\n":
                 return
             replconf_capa = "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n"
             sock.sendall(replconf_capa.encode('utf-8'))
 
-            response = sock.recv(1024)
+            response = sock.recv(1024).decode('utf-8')
             if response != "+OK\r\n":
                 return
             else:
