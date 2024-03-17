@@ -311,13 +311,17 @@ def handle_client(conn, addr):
                 response = f"*2\r\n" + response1 + response2
             else:
                 response = "-ERR invalid number of arguments"
-            conn.send(response.encode())
+            conn.send(response.encode()) 
 
-
-
-
-                        
-
+        # ====================================================================
+        elif command == "info":
+            if args[0] == "replication":
+                replication_info = "role:master\r\n"
+                length = len(replication_info.encode())
+                response = f"${length}\r\n{replication_info}"
+            else:
+                response = "$-1\r\n"
+            return
         # ====================================================================
         else:
             print(f"Received unsupported command: {command}")
