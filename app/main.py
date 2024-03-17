@@ -343,7 +343,8 @@ def parse_arguments():
     parser.add_argument("--replicaof", type=str, nargs=2, help="Start as a replica of a master server")
     args = parser.parse_args()
     return args
-def connect_and_ping_master(master_host, master_port):
+
+def connect_and_ping_master(master_host, master_port, listening_port):
     """Connects to the master server and sends a PING command."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
@@ -353,16 +354,58 @@ def connect_and_ping_master(master_host, master_port):
             
             # Wait for and print the response (optional)
             response = sock.recv(1024)
+            
+            if response == "+PONG\r\n":
+                print("Response from master:", response.decode('utf-8'))
+            else:
+                print("Unexpected Reponse")
+                return # exit since PING failed
+            replconf_listening_port = f"*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n${len(str(listening_port))}\r\n{listening_port}\r\n"
+            sock.sendall(replconf_listening_port.encode('utf-8'))
+
+            response = sock.recv(1024)
+            if response != "+OK\r\n":
+                return
+            replconf_capa = "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n"
+            sock.sendall(replconf_capa.encode('utf-8'))
+
+            response = sock.recv(1024)
+            if response != "+OK\r\n":
+                return
+            else:
+                print("REPLCONF commands successfully acknowledged by master.")
+            
+
+                
+        except Exception as e:
+            print(f"Error connecting to master at {master_host}:{master_port}:", e)
+
+def send_replconf(master_host, master_port, listening_port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        try:
+            sock.connect((master_host, int(master_port)))
+            first = "*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n6380\r\n"
+            second = "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n"
+            sock.sendall(first.encode('utf-8'))
+            sock.sendall(second.encode('utf-8'))
+            
+            # Wait for and print the response (optional)
+            response = sock.recv(1024)
             print("Response from master:", response.decode('utf-8'))
         except Exception as e:
             print(f"Error connecting to master at {master_host}:{master_port}:", e)
+
+
 def main():
     global server_role
     args = parse_arguments()
+    print("Our parse_aruments: ")
+    print(args)
+
     if args.replicaof:
         server_role = "slave"
         master_host, master_port = args.replicaof
-        threading.Thread(target = connect_and_ping_master, args = (master_host, master_port)).start()
+        threading.Thread(target = connect_and_ping_master, args = (master_host, master_port, args.port)).start()
     else:
         server_role = "master"
     port = args.port
