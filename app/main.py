@@ -321,7 +321,7 @@ def handle_client(conn, addr):
                 response = f"${length}\r\n{replication_info}"
             else:
                 response = "$-1\r\n"
-            return
+            conn.send(response.encode())
         # ====================================================================
         else:
             print(f"Received unsupported command: {command}")
