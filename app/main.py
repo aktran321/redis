@@ -317,16 +317,14 @@ def handle_client(conn, addr):
         elif command == "info":
             if args[0] == "replication":
 
-                replication_info = f"role:{server_role}\r\n"
-                length = len(replication_info.encode())
+                replication_info = (
+                    f"role:{server_role}\r\n"
+                    f"master_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb\r\n"
+                    f"master_repl_offset:0\r\n"
+                )
+                total_length = len(replication_info.encode())
 
-                master_replid = "master_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb\r\n"
-                replid_length = len(master_replid.encode())
-
-                offset = f"master_repl_offset:{0}\r\n"
-                offset_length = len(offset.encode())
-
-                response = f"${length}\r\n{replication_info}\r\n" + f"${replid_length}\r\n{master_replid}\r\n" + f"${offset_length}\r\n{offset}\r\n"
+                response = f"${total_length}\r\n{replication_info}\r\n"
                 conn.send(response.encode())
             else:
                 response = "$-1\r\n"
