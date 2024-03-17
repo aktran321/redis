@@ -343,13 +343,26 @@ def parse_arguments():
     parser.add_argument("--replicaof", type=str, nargs=2, help="Start as a replica of a master server")
     args = parser.parse_args()
     return args
-
+def connect_and_ping_master(master_host, master_port):
+    """Connects to the master server and sends a PING command."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        try:
+            sock.connect((master_host, int(master_port)))
+            ping_cmd = "*1\r\n$4\r\nPING\r\n"
+            sock.sendall(ping_cmd.encode('utf-8'))
+            
+            # Wait for and print the response (optional)
+            response = sock.recv(1024)
+            print("Response from master:", response.decode('utf-8'))
+        except Exception as e:
+            print(f"Error connecting to master at {master_host}:{master_port}:", e)
 def main():
     global server_role
     args = parse_arguments()
     if args.replicaof:
         server_role = "slave"
         master_host, master_port = args.replicaof
+        threading.Thread(target = connect_and_ping_master, args = (master_host, master_port)).start()
     else:
         server_role = "master"
     port = args.port
