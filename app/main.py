@@ -324,8 +324,7 @@ def handle_client(conn, addr):
 
                 master_repl_offset = 0
 
-                response = f"${length}\r\n{replication_info}\r\n" + f"${len(master_replid.encode())}\r\nmaster_replid:{master_replid}\r\n" 
-                + f"master_repl_offset:{master_repl_offset}"
+                response = f"${length}\r\n{replication_info}\r\n" + f"${len(master_replid.encode())}\r\nmaster_replid:{master_replid}\r\n" + f"master_repl_offset:{master_repl_offset}"
                 conn.send(response.encode())
             else:
                 response = "$-1\r\n"
