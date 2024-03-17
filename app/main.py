@@ -353,7 +353,7 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             sock.sendall(ping_cmd.encode('utf-8'))
             
             # Wait for and print the response (optional)
-            response = sock.recv(1024)
+            response = sock.recv(1024).decode('utf8')
             
             if response == "+PONG\r\n":
                 print("Response from master:", response.decode('utf-8'))
@@ -377,21 +377,6 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             
 
                 
-        except Exception as e:
-            print(f"Error connecting to master at {master_host}:{master_port}:", e)
-
-def send_replconf(master_host, master_port, listening_port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        try:
-            sock.connect((master_host, int(master_port)))
-            first = "*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n6380\r\n"
-            second = "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n"
-            sock.sendall(first.encode('utf-8'))
-            sock.sendall(second.encode('utf-8'))
-            
-            # Wait for and print the response (optional)
-            response = sock.recv(1024)
-            print("Response from master:", response.decode('utf-8'))
         except Exception as e:
             print(f"Error connecting to master at {master_host}:{master_port}:", e)
 
