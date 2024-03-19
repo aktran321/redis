@@ -3,33 +3,11 @@ import threading
 import time
 import argparse
 import sys
-from rdbtools import RdbParser, RdbCallback
 
 data_arrival_condition = threading.Condition()
 connected_replicas = []
 # Initialize the data_store for storing key-value pairs
 data_store = {}
-
-class MyCallback(RdbCallback):
-    def handle_string(self, key, value):
-        print('String : ', key, value)
-
-    def handle_set(self, key, cardinality, members):
-        print('Set : ', key, cardinality, members)
-
-    def handle_sorted_set(self, key, cardinality, members):
-        print('ZSet :', key, cardinality, members)
-
-    def handle_hash(self, key, length, fields):
-        print('Hash :', key, length, fields)
-
-    def handle_list(self, key, length, items):
-        print('List :', key, length, items)
-
-def parse_rdb(data):
-    callback = MyCallback()
-    parser = RdbParser(callback)
-    parser.parse(data)
 
 def createXreadResponse(dType, stream_key, id):
     combined_response = ""
@@ -400,10 +378,6 @@ def parse_arguments():
     args = parser.parse_args()
     return args
 
-def handle_binary_data(data):
-    rdb = parse_rdb(data)
-    for key, value in rdb.items():
-        data_store[key] = value
 def listen_for_propagated_commands(master_socket):
     while True:
         data = master_socket.recv(1024)
@@ -423,7 +397,7 @@ def listen_for_propagated_commands(master_socket):
                         del data_store[key]
         except UnicodeDecodeError:
             # If the data can't be decoded as UTF-8, handle it as binary data
-            handle_binary_data(data)
+            pass
 
 
 # This is the 3 step process to connect the replica to the master
