@@ -146,12 +146,14 @@ def handle_client(conn, addr):
         elif command == "ping":
             conn.send(b"+PONG\r\n")
 # ====================================================================
-        elif command == "set" and len(args) >= 2:
+        elif command == "set" and len(args) == 4:
             print("set command called")
             key, value, delete_time = args[0], args[1].strip(), None
+            # handles when user calls set commad with PX
             if len(args) >= 4 and args[2].lower().strip() == "px":
                 delete_time = int(args[3].strip())
             data_store[key] = {"value": value, "type": "string"}
+
             print(f"Set key {key} to value {value}")
             if delete_time is not None:
                 delete_key_after_delay(key, delete_time)
@@ -159,6 +161,24 @@ def handle_client(conn, addr):
             # propagate the command to connected replicas
             for replica in connected_replicas:
                 replica.sendall(data)
+# ====================================================================
+            # handling in the scenario we have multiple set commands at once
+        elif command == "set" and len(args) > 4:
+            print("multiple set commands called at once")
+            new_args = []
+            for i in args:
+                if i == "set":
+                    continue
+                else:
+                    new_args.append(i)
+            for i in range(0, len(new_args), 2):
+                new_args[i] = key
+                new_args[i+1] = value
+                data_store[key] = {"value": value, "type": "string"}
+            print("My data_store : ", data_store)
+            for replica in connected_replicas:
+                replica.sendall(data)
+
 # ====================================================================
         elif command == "del" and args:
             for key in args:
@@ -168,8 +188,6 @@ def handle_client(conn, addr):
                 replicas.sendall(data)
 # ====================================================================
         elif command == "get":
-            # when get is called: redis-cli get banana ... we expect $9\r\npineapple\r\n
-            # but the data_store went from {"banana":"pineapple"} to {"banana": {"value": pineapple, "type": "string"}}
 
             print("This is our data_store: ", data_store)
             key = args[0] if args else ""
