@@ -304,11 +304,6 @@ def handle_client(conn, addr):
             if len(args) == 3:
                 dType, stream_key, id = args[0], args[1], args[2]
                 response = f"*1\r\n" + createXreadResponse(dType, stream_key, id)
-
-            # example data) 
-            #{'stream_key': {'type': 'stream', 'value': [{'id': '0-1', 'temperature': '95'}]}, 'other_stream_key': {'type': 'stream', 'value': [{'id': '0-2', 'humidity': '97'}]}}
-            # example args
-            # 
             elif len(args) == 5 and args[0] == "block":
                 wait_time, dType, stream_key, id = int(args[1]), args[2], args[3], args[4]
                 if id == "$":
