@@ -100,7 +100,7 @@ def parse_resp(data):
         print(parts)
     except UnicodeDecodeError:
         # Binary data, return as is
-        return "binary  ", [data]
+        return "binary", [data]
     command = parts[2].lower()
     args = []
 
@@ -381,28 +381,33 @@ def parse_arguments():
     return args
 
 def listen_for_propagated_commands(master_socket):
+    rdb_file_received = False
     while True:
         try:
             data = master_socket.recv(1024)
             if data:
-                command, args = parse_resp(data)
-                if command == "binary":
-                    # Binary data received, handle it here
-                    pass
-                elif command == "set" and len(args) >= 2:
-                    key, value, delete_time = args[0], args[1].strip(), None
-                    if len(args) >= 4 and args[2].lower().strip() == "px":
-                        delete_time = int(args[3].strip())
-                    data_store[key] = {"value": value, "type": "string"}
-                    if delete_time is not None:
-                        delete_key_after_delay(key, delete_time)
-                elif command == "del" and args:
-                    for key in args:
-                        if key in data_store:
-                            del data_store[key]
+                if not rdb_file_received:
+                    # The first data received from the master is the RDB file
+                    # Handle the RDB file here
+                    rdb_file_received = True
+                else:
+                    command, args = parse_resp(data)
+                    if command == "binary":
+                        # Binary data received, handle it here
+                        pass
+                    elif command == "set" and len(args) >= 2:
+                        key, value, delete_time = args[0], args[1].strip(), None
+                        if len(args) >= 4 and args[2].lower().strip() == "px":
+                            delete_time = int(args[3].strip())
+                        data_store[key] = {"value": value, "type": "string"}
+                        if delete_time is not None:
+                            delete_key_after_delay(key, delete_time)
+                    elif command == "del" and args:
+                        for key in args:
+                            if key in data_store:
+                                del data_store[key]
         except socket.error:
             break
-
 
 # This is the 3 step process to connect the replica to the master
 # Replica will send a Ping commnad, then two REPLCONF commands, and then a PSYNC command
