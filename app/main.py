@@ -170,6 +170,8 @@ def handle_client(conn, addr):
         elif command == "get":
             # when get is called: redis-cli get banana ... we expect $9\r\npineapple\r\n
             # but the data_store went from {"banana":"pineapple"} to {"banana": {"value": pineapple, "type": "string"}}
+
+            print("This is our data_store: ", data_store)
             key = args[0] if args else ""
             item = data_store.get(key, {"value":"", "type": "none"})
             if item["type"] != "none":
