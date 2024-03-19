@@ -168,7 +168,7 @@ def handle_client(conn, addr):
             new_args = []
             for i in args:
                 print("loop thrugh args: ", i)
-                if i == "set" or "SET":
+                if i.lower() == "set":
                     continue
                 else:
                     print("Appending to new_args: ", i)
