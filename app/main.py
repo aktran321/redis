@@ -146,7 +146,7 @@ def handle_client(conn, addr):
         elif command == "ping":
             conn.send(b"+PONG\r\n")
 # ====================================================================
-        elif command == "set" and len(args) == 4:
+        elif command == "set" and len(args) <= 4:
             print("set command called")
             key, value, delete_time = args[0], args[1].strip(), None
             # handles when user calls set commad with PX
