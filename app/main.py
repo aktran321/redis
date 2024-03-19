@@ -433,6 +433,7 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             response = sock.recv(1024).decode('utf-8')
             print("Psync response from master: ")
             print(response)
+            # ====================================================================
             # after syncing with master, wait and listen for commands
             threading.Thread(target=listen_for_propagated_commands, args=(sock,)).start()
 
