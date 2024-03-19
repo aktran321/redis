@@ -167,7 +167,7 @@ def handle_client(conn, addr):
             print("multiple set commands called at once")
             new_args = []
             for i in args:
-                if i == "set":
+                if i == "set" or "SET":
                     continue
                 else:
                     new_args.append(i)
