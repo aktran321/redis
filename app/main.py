@@ -176,6 +176,7 @@ def handle_client(conn, addr):
                 response = f"${len(value)}\r\n{value}\r\n"
             else:
                 response = "$-1\r\n"
+            print("Get RESPONSE: ", response)
             conn.send(response.encode())
 # ====================================================================
         elif command == "type":
