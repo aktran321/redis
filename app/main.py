@@ -398,7 +398,6 @@ def listen_for_propagated_commands(master_socket):
 # Replica will send a Ping commnad, then two REPLCONF commands, and then a PSYNC command
 # The commnds have been hardcoded for now, but will be made dynamic in the future
 def connect_and_ping_master(master_host, master_port, listening_port):
-    """Connects to the master server and sends a PING command."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
             sock.connect((master_host, int(master_port)))
@@ -433,7 +432,7 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             print("Psync response from master: ")
             print(response)
             # after syncing with master, wait and listen for commands
-            threading.Thread(target=listen_for_propagataed_commands, args=(sock,)).start()
+            threading.Thread(target=listen_for_propagated_commands, args=(sock,)).start()
 
             
 
