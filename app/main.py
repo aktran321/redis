@@ -452,8 +452,10 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             
 
                 
-        except Exception as e:
+        except socket.error as e:
             print(f"Error connecting to master at {master_host}:{master_port}:", e)
+        except Exception as e:
+            print(f"Unexpected error:", e) 
 
 
 def main():
