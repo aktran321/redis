@@ -167,15 +167,18 @@ def handle_client(conn, addr):
             print("multiple set commands called at once")
             new_args = []
             for i in args:
+                print("loop thrugh args: ", i)
                 if i == "set" or "SET":
                     continue
                 else:
+                    print("Appending to new_args: ", i)
                     new_args.append(i)
             print("new_args: ", new_args)
             for i in range(0, len(new_args), 2):
                 key = new_args[i]
                 value = new_args[i+1]
                 data_store[key] = {"value": value, "type": "string"}
+
             print("My data_store : ", data_store)
             for replica in connected_replicas:
                 replica.sendall(data)
