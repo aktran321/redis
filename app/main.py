@@ -328,6 +328,9 @@ def handle_client(conn, addr):
                 conn.send(response.encode())
             else:
                 response = "$-1\r\n"
+        elif command == "psync":
+            response = "+FULLRESYNC\r\n$40\r\n8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb\r\n$1\r\n0\r\n"
+            conn.send(response.encode())
         # ====================================================================
         elif command == "replconf":
             response = "+OK\r\n"
