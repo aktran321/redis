@@ -329,6 +329,10 @@ def handle_client(conn, addr):
             else:
                 response = "$-1\r\n"
         # ====================================================================
+        elif command == "replconf":
+            response = "+OK\r\n"
+            conn.send(response.encode())
+        # ====================================================================
         else:
             print(f"Received unsupported command: {command}")
             # Optionally send an error response to the client
@@ -379,7 +383,6 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             response = sock.recv(1024).decode('utf-8')
             print("Psync response from master: ")
             print(response)
-            print("ok")
 
             
 
