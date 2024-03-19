@@ -155,6 +155,7 @@ def handle_client(conn, addr):
             data_store[key] = {"value": value, "type": "string"}
 
             print(f"Set key {key} to value {value}")
+            print("Our data_store: ", data_store)
             if delete_time is not None:
                 delete_key_after_delay(key, delete_time)
             conn.send(b"+OK\r\n")
