@@ -378,20 +378,23 @@ def parse_arguments():
 
 def listen_for_propagated_commands(master_socket):
     while True:
-        data = master_socket.recv(1024)
-        if data:
-            command, args = parse_resp(data)
-            if command == "set" and len(args) >= 2:
-                key, value, delete_time = args[0], args[1].strip(), None
-                if len(args) >= 4 and args[2].lower().strip() == "px":
-                    delete_time = int(args[3].strip())
-                data_store[key] = {"value": value, "type": "string"}
-                if delete_time is not None:
-                    delete_key_after_delay(key, delete_time)
-            elif command == "del" and args:
-                for key in args:
-                    if key in data_store:
-                        del data_store[key]
+        try:
+            data = master_socket.recv(1024)
+            if data:
+                command, args = parse_resp(data)
+                if command == "set" and len(args) >= 2:
+                    key, value, delete_time = args[0], args[1].strip(), None
+                    if len(args) >= 4 and args[2].lower().strip() == "px":
+                        delete_time = int(args[3].strip())
+                    data_store[key] = {"value": value, "type": "string"}
+                    if delete_time is not None:
+                        delete_key_after_delay(key, delete_time)
+                elif command == "del" and args:
+                    for key in args:
+                        if key in data_store:
+                            del data_store[key]
+        except socket.error:
+            break
 
 
 # This is the 3 step process to connect the replica to the master
