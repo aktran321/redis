@@ -438,10 +438,8 @@ def connect_and_ping_master(master_host, master_port, listening_port):
 
             repl_psync = f"*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n"
             sock.sendall(repl_psync.encode('utf-8'))
-            response = sock.recv(1024).decode('utf-8')
-            print("Psync response from master: ")
-            print(response)
 
+            # the master sends the RDB file to the replica as a response
             rdb_file = sock.recv(1024)
             handle_rdb_file(rdb_file)
 
