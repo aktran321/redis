@@ -472,9 +472,10 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             rdb_file = sock.recv(1024)
             print("RDB file received from master")
             handle_rdb_file(rdb_file)
-
+            print("WAITING FOR COMMANDS")
             # after syncing with master, wait and listen for commands
             threading.Thread(target=listen_for_propagated_commands, args=(sock,)).start() 
+            print("Listening for commands from master")
         except socket.error as e:
             print(f"Error connecting to master at {master_host}:{master_port}:", e)
         except Exception as e:
