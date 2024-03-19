@@ -3,7 +3,7 @@ import threading
 import time
 import argparse
 import sys
-import rdbtools import RdbParser, RdbCallback
+from rdbtools import RdbParser, RdbCallback
 
 data_arrival_condition = threading.Condition()
 connected_replicas = []
@@ -30,7 +30,7 @@ def parse_rdb(data):
     callback = MyCallback()
     parser = RdbParser(callback)
     parser.parse(data)
-    
+
 def createXreadResponse(dType, stream_key, id):
     combined_response = ""
     # now lets split the ID again
