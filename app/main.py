@@ -171,6 +171,7 @@ def handle_client(conn, addr):
                     continue
                 else:
                     new_args.append(i)
+            print("new_args: ", new_args)
             for i in range(0, len(new_args), 2):
                 key = new_args[i]
                 value = new_args[i+1]
