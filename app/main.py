@@ -388,7 +388,7 @@ def handle_client(conn, addr):
             # Optionally send an error response to the client
             # conn.send(b"-ERR unsupported command\r\n")
 
-    conn.close()
+    # conn.close()
     print(f"Connection closed with {addr}")
 
 def parse_arguments():
