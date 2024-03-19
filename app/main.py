@@ -172,8 +172,8 @@ def handle_client(conn, addr):
                 else:
                     new_args.append(i)
             for i in range(0, len(new_args), 2):
-                new_args[i] = key
-                new_args[i+1] = value
+                key = new_args[i]
+                value = new_args[i+1]
                 data_store[key] = {"value": value, "type": "string"}
             print("My data_store : ", data_store)
             for replica in connected_replicas:
