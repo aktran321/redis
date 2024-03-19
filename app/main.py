@@ -8,7 +8,6 @@ data_arrival_condition = threading.Condition()
 connected_replicas = []
 # Initialize the data_store for storing key-value pairs
 data_store = {}
-
 def createXreadResponse(dType, stream_key, id):
     combined_response = ""
     # now lets split the ID again
@@ -157,7 +156,6 @@ def handle_client(conn, addr):
                 replica.sendall(data)
 # ====================================================================
         elif command == "del" and args:
-            # delete multiple keys if there are multiple args
             for key in args:
                 if key in data_store:
                     del data_store[key]
@@ -381,20 +379,19 @@ def parse_arguments():
 def listen_for_propagated_commands(master_socket):
     while True:
         data = master_socket.recv(1024)
-        try:
-            # Try to decode the data as UTF-8
-            data = data.decode('utf-8')
+        if data:
             command, args = parse_resp(data)
             if command == "set" and len(args) >= 2:
-                key, value = args[0], args[1].strip()
+                key, value, delete_time = args[0], args[1].strip(), None
+                if len(args) >= 4 and args[2].lower().strip() == "px":
+                    delete_time = int(args[3].strip())
                 data_store[key] = {"value": value, "type": "string"}
+                if delete_time is not None:
+                    delete_key_after_delay(key, delete_time)
             elif command == "del" and args:
                 for key in args:
                     if key in data_store:
                         del data_store[key]
-        except UnicodeDecodeError:
-            # If the data can't be decoded as UTF-8, ignore it
-            pass
 
 
 # This is the 3 step process to connect the replica to the master
@@ -435,9 +432,8 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             response = sock.recv(1024).decode('utf-8')
             print("Psync response from master: ")
             print(response)
-            # ====================================================================
             # after syncing with master, wait and listen for commands
-            threading.Thread(target=listen_for_propagated_commands, args=(sock,)).start()
+            threading.Thread(target=listen_for_propagataed_commands, args=(sock,)).start()
 
             
 
