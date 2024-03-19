@@ -448,11 +448,8 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             print(response)
             # after syncing with master, wait and listen for commands
             threading.Thread(target=listen_for_propagated_commands, args=(sock,)).start()
-
             
-
-                
-        except Exception as e:
+        except socket.error as e:
             print(f"Error connecting to master at {master_host}:{master_port}:", e)
 
 
