@@ -380,32 +380,26 @@ def parse_arguments():
     args = parser.parse_args()
     return args
 
-def listen_for_propagated_commands(master_socket):
-    rdb_file_received = False
+def listen_for_propagated_commands(sock):
     while True:
         try:
-            data = master_socket.recv(1024)
+            data = sock.recv(1024)
             if data:
-                if not rdb_file_received:
-                    # The first data received from the master is the RDB file
-                    # Handle the RDB file here
-                    rdb_file_received = True
-                else:
-                    command, args = parse_resp(data)
-                    if command == "binary":
-                        # Binary data received, handle it here
-                        pass
-                    elif command == "set" and len(args) >= 2:
-                        key, value, delete_time = args[0], args[1].strip(), None
-                        if len(args) >= 4 and args[2].lower().strip() == "px":
-                            delete_time = int(args[3].strip())
-                        data_store[key] = {"value": value, "type": "string"}
-                        if delete_time is not None:
-                            delete_key_after_delay(key, delete_time)
-                    elif command == "del" and args:
-                        for key in args:
-                            if key in data_store:
-                                del data_store[key]
+                command, args = parse_resp(data)
+                if command == "binary":
+                    # Binary data received, handle it here
+                    pass
+                elif command == "set" and len(args) >= 2:
+                    key, value, delete_time = args[0], args[1].strip(), None
+                    if len(args) >= 4 and args[2].lower().strip() == "px":
+                        delete_time = int(args[3].strip())
+                    data_store[key] = {"value": value, "type": "string"}
+                    if delete_time is not None:
+                        delete_key_after_delay(key, delete_time)
+                elif command == "del" and args:
+                    for key in args:
+                        if key in data_store:
+                            del data_store[key]
         except socket.error:
             break
 
@@ -441,22 +435,25 @@ def connect_and_ping_master(master_host, master_port, listening_port):
                 return
             else:
                 print("REPLCONF commands successfully acknowledged by master.")
+
             repl_psync = f"*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n"
             sock.sendall(repl_psync.encode('utf-8'))
             response = sock.recv(1024).decode('utf-8')
             print("Psync response from master: ")
             print(response)
+
+            rdb_file = sock.recv(1024)
+            handle_rdb_file(rdb_file)
+
             # after syncing with master, wait and listen for commands
-            threading.Thread(target=listen_for_propagated_commands, args=(sock,)).start()
-
-            
-
-                
+            threading.Thread(target=listen_for_propagated_commands, args=(sock,)).start() 
         except socket.error as e:
             print(f"Error connecting to master at {master_host}:{master_port}:", e)
         except Exception as e:
-            print(f"Unexpected error:", e) 
-
+            print(f"Unexpected error:", e)
+def handle_rdb_file(rdb_file):
+    # TODO: Implement this function to handle the RDB file
+    pass
 
 def main():
     global server_role
