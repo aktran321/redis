@@ -379,6 +379,7 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             response = sock.recv(1024).decode('utf-8')
             print("Psync response from master: ")
             print(response)
+            print("ok")
 
             
 
