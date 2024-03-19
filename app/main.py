@@ -152,6 +152,7 @@ def handle_client(conn, addr):
             if len(args) >= 4 and args[2].lower().strip() == "px":
                 delete_time = int(args[3].strip())
             data_store[key] = {"value": value, "type": "string"}
+            print(f"Set key {key} to value {value}")
             if delete_time is not None:
                 delete_key_after_delay(key, delete_time)
             conn.send(b"+OK\r\n")
@@ -394,7 +395,9 @@ def listen_for_propagated_commands(sock):
                     key, value, delete_time = args[0], args[1].strip(), None
                     if len(args) >= 4 and args[2].lower().strip() == "px":
                         delete_time = int(args[3].strip())
+                    # set the data
                     data_store[key] = {"value": value, "type": "string"}
+                    print("Replica's data_store: ", data_store)
                     if delete_time is not None:
                         delete_key_after_delay(key, delete_time)
                 elif command == "del" and args:
