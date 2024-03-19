@@ -95,8 +95,12 @@ def delete_key_after_delay(key, delay_ms):
 def parse_resp(data):
     """Parse RESP data into command and arguments."""
     print(data)
-    parts = data.decode().split('\r\n')
-    print(parts)
+    try: 
+        parts = data.decode().split('\r\n')
+        print(parts)
+    except UnicodeDecodeError:
+        # Binary data, return as is
+        return "binary  ", [data]
     command = parts[2].lower()
     args = []
 
@@ -382,7 +386,10 @@ def listen_for_propagated_commands(master_socket):
             data = master_socket.recv(1024)
             if data:
                 command, args = parse_resp(data)
-                if command == "set" and len(args) >= 2:
+                if command == "binary":
+                    # Binary data received, handle it here
+                    pass
+                elif command == "set" and len(args) >= 2:
                     key, value, delete_time = args[0], args[1].strip(), None
                     if len(args) >= 4 and args[2].lower().strip() == "px":
                         delete_time = int(args[3].strip())
