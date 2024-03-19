@@ -463,10 +463,14 @@ def connect_and_ping_master(master_host, master_port, listening_port):
                 print("REPLCONF commands successfully acknowledged by master.")
 
             repl_psync = f"*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n"
+            print("Sending PSYNC command to master")
             sock.sendall(repl_psync.encode('utf-8'))
+            print("PSYNC command sent to master")
 
             # the master sends the RDB file to the replica as a response
+            print("Waiting for RDB file from master")
             rdb_file = sock.recv(1024)
+            print("RDB file received from master")
             handle_rdb_file(rdb_file)
 
             # after syncing with master, wait and listen for commands
@@ -476,6 +480,7 @@ def connect_and_ping_master(master_host, master_port, listening_port):
         except Exception as e:
             print(f"Unexpected error:", e)
 def handle_rdb_file(rdb_file):
+    print("Handling RDB file")
     # TODO: Implement this function to handle the RDB file
     pass
 
