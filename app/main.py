@@ -377,7 +377,9 @@ def handle_client(conn, addr):
             rdb_content = bytes.fromhex(rdb_hex)
             length = len(rdb_content)
             header = f"${length}\r\n".encode()
+            print("Send RDB file")
             conn.send(header + rdb_content)
+            print("RDB file sent")
         # ====================================================================
         elif command == "replconf":
             response = "+OK\r\n"
