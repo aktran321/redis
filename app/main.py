@@ -5,6 +5,7 @@ import argparse
 import sys
 
 data_arrival_condition = threading.Condition()
+connected_replicas = []
 # Initialize the data_store for storing key-value pairs
 data_store = {}
 def createXreadResponse(dType, stream_key, id):
@@ -123,7 +124,7 @@ def parse_resp(data):
     return command, args
 
 def handle_client(conn, addr):
-    
+    global connected_replicas
     """Handle a client connection."""
     print(f"New connection established from {addr}")
     while True:
@@ -150,6 +151,17 @@ def handle_client(conn, addr):
             if delete_time is not None:
                 delete_key_after_delay(key, delete_time)
             conn.send(b"+OK\r\n")
+            # propagate the command to connected replicas
+            for replica in connected_replicas:
+                replica.sendall(data)
+# ====================================================================
+        elif command == "del" and args:
+            # delete multiple keys if there are multiple args
+            for key in args:
+                if key in data_store:
+                    del data_store[key]
+            for replicas in connected_replicas:
+                replicas.sendall(data)
 # ====================================================================
         elif command == "get":
             # when get is called: redis-cli get banana ... we expect $9\r\npineapple\r\n
@@ -334,6 +346,8 @@ def handle_client(conn, addr):
             offset = "0"
             response = f"+FULLRESYNC {replid} {offset}\r\n"
             conn.send(response.encode())
+
+            # prepare and send the RDB file
             rdb_hex = "524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2"
             rdb_content = bytes.fromhex(rdb_hex)
             length = len(rdb_content)
@@ -342,6 +356,10 @@ def handle_client(conn, addr):
         # ====================================================================
         elif command == "replconf":
             response = "+OK\r\n"
+            if conn not in connected_replicas:
+                connected_replicas.append(conn)
+            print("Added replica to connected_replicas: ", conn)
+            print("This is the connected replicas: "), connected_replicas
             conn.send(response.encode())
         # ====================================================================
         else:
@@ -359,6 +377,27 @@ def parse_arguments():
     args = parser.parse_args()
     return args
 
+def listen_for_propagated_commands(master_socket):
+    while True:
+        data = master_socket.recv(1024)
+        if data:
+            command, args = parse_resp(data)
+            if command == "set" and len(args) >= 2:
+                key, value, delete_time = args[0], args[1].strip(), None
+                if len(args) >= 4 and args[2].lower().strip() == "px":
+                    delete_time = int(args[3].strip())
+                data_store[key] = {"value": value, "type": "string"}
+                if delete_time is not None:
+                    delete_key_after_delay(key, delete_time)
+            elif command == "del" and args:
+                for key in args:
+                    if key in data_store:
+                        del data_store[key]
+
+
+# This is the 3 step process to connect the replica to the master
+# Replica will send a Ping commnad, then two REPLCONF commands, and then a PSYNC command
+# The commnds have been hardcoded for now, but will be made dynamic in the future
 def connect_and_ping_master(master_host, master_port, listening_port):
     """Connects to the master server and sends a PING command."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -394,6 +433,8 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             response = sock.recv(1024).decode('utf-8')
             print("Psync response from master: ")
             print(response)
+            # after syncing with master, wait and listen for commands
+            threading.Thread(target=listen_for_propagataed_commands, args=(sock,)).start()
 
             
 
