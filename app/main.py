@@ -452,6 +452,7 @@ def listen_for_propagated_commands(sock):
             elif data == b'*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n':
                 data_store["foo"] = {"value": "123", "type": "string"}
         except socket.error:
+            print("Socket error broke connection")
             break
 
 
