@@ -186,6 +186,7 @@ def handle_client(conn, addr):
             print("send commands to replicas from multiple SET calls at once")
             for replica in connected_replicas:
                 print("sending to replica from MULTIPLE set calls at once")
+                print("Our data: ", data)
                 replica.sendall(data)
 
 # ====================================================================
