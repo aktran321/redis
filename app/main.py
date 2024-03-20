@@ -133,9 +133,9 @@ def handle_client(conn, addr):
     print(f"New connection established from {addr}")
     while True:
         data = conn.recv(1024)
-        #if not data:
-          #  print("Connection closed by client!!!!!!")
-         #   break
+        if not data:
+            print("Connection closed by client!!!!!!")
+            break
 
         command, args = parse_resp(data)
 # ====================================================================
@@ -522,17 +522,18 @@ def main():
     print(args)
 
     if args.replicaof:
-        print("I am a replica")
         server_role = "slave"
         master_host, master_port = args.replicaof
-        print("waiting for master to connect")
+        print(f"I am a replica, attemptin to connect to master at {master_host}:{master_port}")
         threading.Thread(target = connect_and_ping_master, args = (master_host, master_port, args.port)).start()
     else:
         server_role = "master"
     port = args.port
+    print(f"{server_role.upper()} server starting on port {port}")
+    
     """Main function to start the server."""
     server_socket = socket.create_server(("localhost", port), reuse_port=True)
-    print(f"Server is listening on port {port} ")
+    print(f"MASTER Server is listening on port {port} ")
     
     while True:
         conn, addr = server_socket.accept()
