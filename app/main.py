@@ -160,7 +160,9 @@ def handle_client(conn, addr):
                 delete_key_after_delay(key, delete_time)
             conn.send(b"+OK\r\n")
             # propagate the command to connected replicas
+            print("send commands to replicas from single SET call")
             for replica in connected_replicas:
+                print("sending to replica from single set call")
                 replica.sendall(data)
 # ====================================================================
             # handling in the scenario we have multiple set commands at once
@@ -181,7 +183,9 @@ def handle_client(conn, addr):
                 data_store[key] = {"value": value, "type": "string"}
 
             print("My data_store : ", data_store)
+            print("send commands to replicas from multiple SET calls at once")
             for replica in connected_replicas:
+                print("sending to replica from MULTIPLE set calls at once")
                 replica.sendall(data)
 
 # ====================================================================
