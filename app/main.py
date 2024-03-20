@@ -413,7 +413,7 @@ def listen_for_propagated_commands(sock):
                 if command == "binary":
                     # Binary data received, handle it here
                     pass
-                elif command == "set" and len(args) >= 2:
+                elif command == "set" and len(args) <= 4:
                     key, value, delete_time = args[0], args[1].strip(), None
                     if len(args) >= 4 and args[2].lower().strip() == "px":
                         delete_time = int(args[3].strip())
@@ -422,6 +422,17 @@ def listen_for_propagated_commands(sock):
                     print("Replica's data_store: ", data_store)
                     if delete_time is not None:
                         delete_key_after_delay(key, delete_time)
+                elif command == "set" and len(args) > 4:
+                    new_args = []
+                    for i in args:
+                        if i.lower() == "set":
+                            continue
+                        else:
+                            new_args.append(i)
+                    for i in range(0, len(new_args), 2):
+                        key = new_args[i]
+                        value = new_args[i+1]
+                        data_store[key] = {"value": value, "type": "string"}
                 elif command == "del" and args:
                     for key in args:
                         if key in data_store:
