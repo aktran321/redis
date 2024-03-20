@@ -443,7 +443,7 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             response = sock.recv(1024).decode('utf8')
             
             if response == "+PONG\r\n":
-                print("Response from master:", response)
+                print("Response from master: ", response)
             else:
                 print("Unexpected Reponse")
                 return # exit since PING failed
@@ -492,15 +492,17 @@ def main():
     print(args)
 
     if args.replicaof:
+        print("I am a replica")
         server_role = "slave"
         master_host, master_port = args.replicaof
+        print("waiting for master to connect")
         threading.Thread(target = connect_and_ping_master, args = (master_host, master_port, args.port)).start()
     else:
         server_role = "master"
     port = args.port
     """Main function to start the server."""
     server_socket = socket.create_server(("localhost", port), reuse_port=True)
-    print(f"Server is listening on port {port}")
+    print(f"Server is listening on port {port} ")
     
     while True:
         conn, addr = server_socket.accept()
