@@ -439,7 +439,7 @@ def listen_for_propagated_commands(sock):
 def listen_for_propagated_commands(sock):
     while True:
         try:
-            print("Listening for commands from master")
+            print("Listening for commands from master, inside listen_for_propagated_commands function.")
             data = sock.recv(1024)
             if data:
                 print("Data received from master: ", data)
@@ -503,7 +503,7 @@ def connect_and_ping_master(master_host, master_port, listening_port):
             print("WAITING FOR COMMANDS")
             # after syncing with master, wait and listen for commands
             threading.Thread(target=listen_for_propagated_commands, args=(sock,)).start() 
-            print("Listening for commands from master")
+            print("Listening for commands from master, outside listen_for_propagated_commands function.")
         except socket.error as e:
             print(f"Error connecting to master at {master_host}:{master_port}:", e)
         except Exception as e:
