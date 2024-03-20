@@ -451,10 +451,10 @@ def listen_for_propagated_commands(sock):
                 print("Data store updated with hardcoded values for foo, bar, and baz.")
             elif data == b'*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n':
                 data_store["foo"] = {"value": "123", "type": "string"}
-        except socket.error:
-            print("Socket error broke connection")
+        except socket.error as e:
+            print("Socket error broke connection: ", e)
             print("My sock data: ", sock)
-            
+
             break
 
 
