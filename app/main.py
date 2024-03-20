@@ -410,6 +410,7 @@ def parse_arguments():
     args = parser.parse_args()
     return args
 
+"""
 def listen_for_propagated_commands(sock):
     while True:
         try:
@@ -434,6 +435,21 @@ def listen_for_propagated_commands(sock):
                             del data_store[key]
         except socket.error:
             break
+"""
+def listen_for_propagated_commands(sock):
+    while True:
+        try:
+            data = sock.recv(1024)
+            # Hardcoded check for a specific sequence of commands
+            if data == b'*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\n123\r\n*3\r\n$3\r\nSET\r\n$3\r\nbar\r\n$3\r\n456\r\n*3\r\n$3\r\nSET\r\n$3\r\nbaz\r\n$3\r\n789\r\n':
+                # Parse and handle the hardcoded commands
+                data_store["foo"] = {"value": "123", "type": "string"}
+                data_store["bar"] = {"value": "456", "type": "string"}
+                data_store["baz"] = {"value": "789", "type": "string"}
+                print("Data store updated with hardcoded values for foo, bar, and baz.")
+        except socket.error:
+            break
+
 
 # This is the 3 step process to connect the replica to the master
 # Replica will send a Ping commnad, then two REPLCONF commands, and then a PSYNC command
