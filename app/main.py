@@ -454,6 +454,7 @@ def listen_for_propagated_commands(sock):
                 data_store["foo"] = {"value": "123", "type": "string"}
         except socket.error:
             print("Socket error broke connection")
+            print("My sock data: ", sock)
             break
 
 
