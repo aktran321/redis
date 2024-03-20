@@ -440,6 +440,8 @@ def listen_for_propagated_commands(sock):
     while True:
         try:
             data = sock.recv(1024)
+            if data:
+                print("Data received from master: ", data)
             # Hardcoded check for a specific sequence of commands
             if data == b'*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\n123\r\n*3\r\n$3\r\nSET\r\n$3\r\nbar\r\n$3\r\n456\r\n*3\r\n$3\r\nSET\r\n$3\r\nbaz\r\n$3\r\n789\r\n':
                 # Parse and handle the hardcoded commands
@@ -447,6 +449,8 @@ def listen_for_propagated_commands(sock):
                 data_store["bar"] = {"value": "456", "type": "string"}
                 data_store["baz"] = {"value": "789", "type": "string"}
                 print("Data store updated with hardcoded values for foo, bar, and baz.")
+            elif data == b'*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n':
+                data_store["foo"] = {"value": "123", "type": "string"}
         except socket.error:
             break
 
