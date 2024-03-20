@@ -123,8 +123,8 @@ def parse_resp(data):
             args.append(part)
     if args and args[-1] == "":
         args = args[:-1]
-        print("args: ")
-        print(args)
+        print("args: ", args)
+        print("command: ", command)
     return command, args
 
 def handle_client(conn, addr):
