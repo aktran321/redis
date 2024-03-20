@@ -439,7 +439,6 @@ def listen_for_propagated_commands(sock):
 def listen_for_propagated_commands(sock):
     while True:
         try:
-            print("Listening for commands from master, inside listen_for_propagated_commands function.")
             data = sock.recv(1024)
             if data:
                 print("Data received from master: ", data)
@@ -455,6 +454,7 @@ def listen_for_propagated_commands(sock):
         except socket.error:
             print("Socket error broke connection")
             print("My sock data: ", sock)
+            
             break
 
 
