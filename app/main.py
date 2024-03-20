@@ -133,8 +133,9 @@ def handle_client(conn, addr):
     print(f"New connection established from {addr}")
     while True:
         data = conn.recv(1024)
-        if not data:
-            break
+        #if not data:
+          #  print("Connection closed by client!!!!!!")
+         #   break
 
         command, args = parse_resp(data)
 # ====================================================================
@@ -401,7 +402,7 @@ def handle_client(conn, addr):
             # conn.send(b"-ERR unsupported command\r\n")
 
     # conn.close()
-    print(f"Connection closed with {addr}")
+    # print(f"Connection closed with {addr}")
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Custom Redis Server")
